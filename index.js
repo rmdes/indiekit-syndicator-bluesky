@@ -8,7 +8,8 @@ const defaults = {
   profileUrl: "https://bsky.app/profile",
   serviceUrl: "https://bsky.social",
   includePermalink: false,
-  syndicateExternalLikes: true, // NEW: Enable syndication of external likes
+  syndicateExternalLikes: true, // Enable syndication of external likes
+  syndicateExternalReposts: true, // Enable syndication of external reposts
   checked: false,
 };
 
@@ -23,6 +24,7 @@ export default class BlueskySyndicator {
    * @param {string} [options.password] - Password
    * @param {boolean} [options.includePermalink] - Include permalink in status
    * @param {boolean} [options.syndicateExternalLikes] - Syndicate likes of external URLs as posts
+   * @param {boolean} [options.syndicateExternalReposts] - Syndicate reposts of external URLs as posts
    * @param {boolean} [options.checked] - Check syndicator in UI
    */
   constructor(options = {}) {
@@ -92,6 +94,7 @@ export default class BlueskySyndicator {
         serviceUrl: this.#serviceUrl,
         includePermalink: this.options.includePermalink,
         syndicateExternalLikes: this.options.syndicateExternalLikes,
+        syndicateExternalReposts: this.options.syndicateExternalReposts,
       });
 
       return await bluesky.post(properties, publication.me);
