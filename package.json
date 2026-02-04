@@ -1,6 +1,6 @@
 {
   "name": "@rmdes/indiekit-syndicator-bluesky",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Bluesky syndicator for Indiekit with external like support",
   "type": "module",
   "main": "index.js",
