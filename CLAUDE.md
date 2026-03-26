@@ -178,6 +178,14 @@ If an external URL has no OG image, the plugin generates a default thumbnail usi
 
 Generation can be disabled by passing `{ generateDefaultImage: false }` to `createExternalEmbed()`.
 
+### Reply Threading (v1.0.21+)
+
+Reply threading is entirely custom (upstream has no reply support). When `in-reply-to` contains a Bluesky URL (`bsky.app` or `bluesky`), `resolveReplyRef()` fetches the parent post via AT Protocol to get the `uri` + `cid` needed for Bluesky's reply reference format.
+
+**`in-reply-to` can be string or array.** JF2 normalization may leave it as either depending on how the Micropub request entered the system. The code unwraps arrays: `Array.isArray(raw) ? raw[0] : raw`.
+
+**Errors propagate.** If `resolveReplyRef()` fails (handle changed, post deleted, rate limited), the error propagates to the syndication endpoint which logs it and marks it as a failed target for retry. Pre-v1.0.21 silently caught the error and posted standalone (no threading).
+
 ### URL Extraction Priority
 
 `getExternalUrl()` extracts URLs from content in this order:
