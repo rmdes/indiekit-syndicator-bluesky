@@ -1,11 +1,12 @@
 # @rmdes/indiekit-syndicator-bluesky
 
-Bluesky syndicator for [Indiekit](https://getindiekit.com) with full support for likes, reposts, bookmarks, and quote posts using the AT Protocol.
+Bluesky syndicator for [Indiekit](https://getindiekit.com) with full support for likes, reposts, bookmarks, replies, and quote posts using the AT Protocol.
 
 ## Features
 
 - Syndicates notes, articles, and photos to Bluesky
 - Native likes and reposts for Bluesky URLs
+- Threaded replies to Bluesky posts
 - External like/repost support (syndicates as posts with link cards)
 - Automatic rich text facet detection (@mentions, #hashtags, URLs)
 - Open Graph link card embeds that reuse your site's pre-generated OG images
@@ -82,6 +83,28 @@ Text posts, articles with links, and photo posts are syndicated to Bluesky as re
 
 Creates a post with a link card showing the bookmarked URL, plus your commentary and permalink.
 
+### Replies
+
+A post whose `in-reply-to` is a Bluesky URL is syndicated as a genuine threaded reply,
+appearing under the original post rather than as a standalone post that merely links to it.
+
+The plugin fetches the parent post over the AT Protocol to obtain the `uri` and `cid` that
+Bluesky's reply reference requires, then sets both `parent` and `root`. If the post you are
+replying to is itself a reply, its existing `root` is reused, so your reply joins the
+original thread instead of starting a new one.
+
+Two details worth knowing:
+
+- **Only Bluesky URLs thread.** The URL is matched by looking for `bsky.app` or `bluesky`
+  in it. Replying to a Mastodon post, or to anything else, syndicates as an ordinary post.
+- **Only regular posts thread.** Likes, reposts, and bookmarks are dispatched before reply
+  resolution happens, so an `in-reply-to` alongside a `like-of` or `bookmark-of` is ignored.
+
+If the parent cannot be resolved — deleted post, changed handle, rate limit — the error is
+raised rather than swallowed. Indiekit marks the target as failed and the post can be
+retried, instead of silently publishing an unthreaded reply. (Before v1.0.21 it did the
+latter.)
+
 ## How It Works
 
 The plugin uses the AT Protocol (`@atproto/api`) to:
@@ -90,8 +113,9 @@ The plugin uses the AT Protocol (`@atproto/api`) to:
 2. Upload and compress images (if any)
 3. Build post text with automatic facet detection
 4. Fetch Open Graph metadata for link cards
-5. Create the appropriate post type (post, like, repost, quote)
-6. Return the syndicated post URL
+5. Resolve the reply reference when replying to a Bluesky post
+6. Create the appropriate post type (post, reply, like, repost, quote)
+7. Return the syndicated post URL
 
 ## Text Handling
 
