@@ -8,7 +8,7 @@ Bluesky syndicator for [Indiekit](https://getindiekit.com) with full support for
 - Native likes and reposts for Bluesky URLs
 - External like/repost support (syndicates as posts with link cards)
 - Automatic rich text facet detection (@mentions, #hashtags, URLs)
-- Open Graph link card embeds with thumbnail generation
+- Open Graph link card embeds that reuse your site's pre-generated OG images
 - Image compression and upload (up to 4 images per post)
 - Smart URL handling (removes URLs shown in OG cards from text)
 - Quote posts with optional images
@@ -111,10 +111,30 @@ Images are automatically:
 
 ## Link Card Embeds
 
-For posts with external URLs (articles, bookmarks, likes of external URLs), the plugin:
-1. For own-domain URLs, uploads the site's pre-generated OG image from `/og/<slug>.png`
-2. Otherwise fetches Open Graph metadata and uploads the page's `og:image`
-3. Creates a link card embed — thumbless if neither source yields an image
+Any post without photos gets a link card. The card points at the post's external URL
+(the article, bookmark, or liked page) when there is one, and at the post's own permalink
+when there isn't — so a plain note still shows a card linking back to your site.
+
+Photos always win: a post with images embeds those instead, and no link card is shown.
+
+The card's title and description always come from fetching that URL and reading its
+`og:title` / `og:description`, falling back to `<title>` and `<meta name="description">`.
+
+The thumbnail is sourced in two tiers:
+
+1. **Your own posts** — the plugin uploads `<your-site>/og/<slug>.png`, the Open Graph
+   image your site has already generated. It derives `<slug>` from the URL path, handling
+   both `/notes/2026/02/18/slug` and `/content/type/2026-02-18-slug/`. This requires
+   Indiekit's `publication.me` to be set, which it normally is.
+2. **Everything else** — the page's own `og:image`.
+
+If neither yields an image, the card ships without a thumbnail and Bluesky renders it as a
+text-only card. The plugin does not generate a thumbnail of its own; it did until v1.0.22,
+and the result was worse than what a site's own OG pipeline produces.
+
+A missing `/og/<slug>.png` is safe: the upload is rejected unless the response is both OK
+and an actual image, so a site that answers with an HTML 404 page falls through to tier 2
+rather than uploading the error page as a thumbnail.
 
 ## Environment Variables
 
