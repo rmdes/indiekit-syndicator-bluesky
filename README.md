@@ -66,7 +66,6 @@ Text posts, articles with links, and photo posts are syndicated to Bluesky as re
 - Detects and creates rich text facets (@mentions, #hashtags, links)
 - Compresses and uploads up to 4 photos
 - Creates Open Graph link cards for external URLs
-- Generates default thumbnails if no OG image exists
 
 ### Likes
 
@@ -113,10 +112,9 @@ Images are automatically:
 ## Link Card Embeds
 
 For posts with external URLs (articles, bookmarks, likes of external URLs), the plugin:
-1. Fetches Open Graph metadata (title, description, image)
-2. Uploads the OG image as a thumbnail
-3. If no OG image exists, generates a default thumbnail with the title text
-4. Creates a link card embed
+1. For own-domain URLs, uploads the site's pre-generated OG image from `/og/<slug>.png`
+2. Otherwise fetches Open Graph metadata and uploads the page's `og:image`
+3. Creates a link card embed — thumbless if neither source yields an image
 
 ## Environment Variables
 
