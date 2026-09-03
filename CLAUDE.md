@@ -10,10 +10,10 @@
 - External like/repost syndication as posts with OG link cards
 - Rich text facets (auto-detects @mentions, #hashtags, URLs)
 - Image compression and upload (max 4 images, 1MB each)
-- Open Graph metadata fetching and thumbnail generation
+- Open Graph metadata fetching and thumbnail sourcing (pre-generated `/og/*.png`, else the page’s `og:image`)
 - Smart URL handling (removes URLs shown in OG cards from text)
 
-**Version:** 1.0.22
+**Version:** 1.0.24
 **npm:** `@rmdes/indiekit-syndicator-bluesky`
 
 ## Architecture
