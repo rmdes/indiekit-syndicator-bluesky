@@ -7,6 +7,7 @@ const defaults = {
   password: process.env.BLUESKY_PASSWORD,
   profileUrl: "https://bsky.app/profile",
   serviceUrl: "https://bsky.social",
+  includeCategories: false,
   includePermalink: false,
   syndicateExternalLikes: true, // Enable syndication of external likes
   syndicateExternalReposts: true, // Enable syndication of external reposts
@@ -22,6 +23,7 @@ export default class BlueskySyndicator {
    * @param {string} [options.serviceUrl] - Service URL
    * @param {string} [options.handle] - Handle
    * @param {string} [options.password] - Password
+   * @param {boolean} [options.includeCategories] - Add categories as hashtags
    * @param {boolean} [options.includePermalink] - Include permalink in status
    * @param {boolean} [options.syndicateExternalLikes] - Syndicate likes of external URLs as posts
    * @param {boolean} [options.syndicateExternalReposts] - Syndicate reposts of external URLs as posts
@@ -50,8 +52,8 @@ export default class BlueskySyndicator {
   }
 
   get info() {
-    const userName = this.options?.handle?.replace("@", "");
-    const url = new URL(this.options.profileUrl).href + "/" + userName;
+    const username = this.options?.handle?.replace("@", "");
+    const url = new URL(this.options.profileUrl).href + "/" + username;
 
     const info = {
       checked: this.options.checked,
@@ -92,6 +94,7 @@ export default class BlueskySyndicator {
         password: this.options?.password,
         profileUrl: this.#profileUrl,
         serviceUrl: this.#serviceUrl,
+        includeCategories: this.options.includeCategories,
         includePermalink: this.options.includePermalink,
         syndicateExternalLikes: this.options.syndicateExternalLikes,
         syndicateExternalReposts: this.options.syndicateExternalReposts,
