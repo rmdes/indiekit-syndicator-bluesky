@@ -1,5 +1,7 @@
 import process from "node:process";
+
 import { IndiekitError } from "@indiekit/error";
+
 import { Bluesky } from "./lib/bluesky.js";
 
 const defaults = {

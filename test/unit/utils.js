@@ -217,7 +217,7 @@ describe("syndicator-bluesky/lib/utils", async () => {
 
     assert.equal(
       result,
-      "> I ate a cheese sandwich, which was > 10. https://en.wikipedia.org/wiki/Cheese",
+      "> I ate a cheese sandwich, which was > 10.\n\nhttps://en.wikipedia.org/wiki/Cheese",
     );
   });
 
@@ -234,7 +234,7 @@ describe("syndicator-bluesky/lib/utils", async () => {
       '<p>Hello <a href="/hello">world</a>, hello <a href="https://moon.example">moon</a>.</p>',
     );
 
-    assert.equal(result, "Hello world, hello moon. https://moon.example");
+    assert.equal(result, "Hello world, hello moon.\n\nhttps://moon.example");
   });
 
   it("Converts Bluesky URI to post URL", () => {

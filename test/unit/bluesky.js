@@ -32,6 +32,8 @@ describe("syndicator-bluesky/lib/bluesky", () => {
   const photo = [{ url: "https://website.example/photo1.jpg", alt: "Photo" }];
 
   let bluesky;
+
+  let blueskyNoExternal;
   let postUrl;
   let network;
   let seedAgent;
@@ -68,6 +70,14 @@ describe("syndicator-bluesky/lib/bluesky", () => {
       serviceUrl: network.pds.url,
       identifier: aliceAccount.handle,
       password: aliceAccount.password,
+    });
+    blueskyNoExternal = new Bluesky({
+      profileUrl: `https://bsky.app/profile`,
+      serviceUrl: network.pds.url,
+      identifier: aliceAccount.handle,
+      password: aliceAccount.password,
+      syndicateExternalLikes: false,
+      syndicateExternalReposts: false,
     });
   });
 
@@ -158,7 +168,7 @@ describe("syndicator-bluesky/lib/bluesky", () => {
     await mockAgent("syndicator-bluesky");
 
     await assert.rejects(bluesky.uploadMedia({ url: `${me}/404.jpg` }, me), {
-      message: "Not Found",
+      message: "Failed to fetch media: 404 Not Found",
     });
   });
 
@@ -169,7 +179,10 @@ describe("syndicator-bluesky/lib/bluesky", () => {
   });
 
   it("Doesn’t post a like of a URL to Bluesky", async () => {
-    const result = await bluesky.post({ "like-of": "https://foo.bar" }, me);
+    const result = await blueskyNoExternal.post(
+      { "like-of": "https://foo.bar" },
+      me,
+    );
 
     assert.equal(result, undefined);
   });
@@ -181,7 +194,10 @@ describe("syndicator-bluesky/lib/bluesky", () => {
   });
 
   it("Doesn’t post a repost of a URL to Bluesky", async () => {
-    const result = await bluesky.post({ "repost-of": "https://foo.bar" }, me);
+    const result = await blueskyNoExternal.post(
+      { "repost-of": "https://foo.bar" },
+      me,
+    );
 
     assert.equal(result, undefined);
   });
