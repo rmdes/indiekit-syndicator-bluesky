@@ -15,14 +15,14 @@ jobs:
         with:
           node-version: 24
 
-      # Not every plugin here commits a lockfile, and `npm ci` requires one.
-      # (`cache: npm` above would need one too, so it is deliberately omitted.)
-      - name: Install dependencies
-        run: |
-          if [ -f package-lock.json ]; then
-            npm ci
-          else
-            npm install --no-audit --no-fund
-          fi
+      - run: npm ci
 
-      - run: npm test
+      # `npm test` also runs test/index.js, which imports @indiekit-test/fixtures
+      # — a workspace-internal helper of the upstream monorepo (helpers/fixtures),
+      # never published to npm. That file can only run with the fork overlaid into
+      # indiekit-origin, which is what indiekit-scripts/fork-verify.sh does.
+      #
+      # These two cover the fork's own additions (external embeds, AT-URI mapping),
+      # so they are the part worth gating a standalone PR on.
+      - name: Run standalone tests
+        run: node --test test/external-embed.js test/uri-to-post-url.js
