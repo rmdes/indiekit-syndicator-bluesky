@@ -10,10 +10,10 @@
 - External like/repost syndication as posts with OG link cards
 - Rich text facets (auto-detects @mentions, #hashtags, URLs)
 - Image compression and upload (max 4 images, 1MB each)
-- Open Graph metadata fetching and thumbnail generation
+- Open Graph metadata fetching and thumbnail sourcing (pre-generated `/og/*.png`, else the page’s `og:image`)
 - Smart URL handling (removes URLs shown in OG cards from text)
 
-**Version:** 1.0.9
+**Version:** 1.0.24
 **npm:** `@rmdes/indiekit-syndicator-bluesky`
 
 ## Architecture
@@ -103,7 +103,6 @@ Utility functions:
 - `getContentText(properties)` - Extracts plain text from JF2 properties
 - `htmlToStatusText(html)` - Converts HTML to plain text, appends last link
 - `fetchOpenGraphData(url)` - Fetches OG title/description/image from HTML
-- `generateDefaultOgImage(title, options)` - Generates PNG thumbnail from title text via SVG+sharp
 - `getPostImage(buffer, mimeType)` - Compresses images to <1MB
 - `constrainImage(buffer, maxBytes, quality)` - Recursive compression
 - `getPostParts(url)` - Extracts DID and rkey from Bluesky URL
@@ -169,14 +168,23 @@ Bluesky APIs return AT URIs (`at://did:plc:abc123/app.bsky.feed.post/xyz789`). T
 
 When `syndicateExternalLikes` or `syndicateExternalReposts` is `false`, the plugin returns `undefined` instead of posting. Indiekit interprets this as "syndication not applicable" (not an error).
 
-### OG Image Generation
+### OG Image Sourcing (v1.0.22+)
 
-If an external URL has no OG image, the plugin generates a default thumbnail using SVG + sharp. This requires:
-- `sharp` with all image format dependencies installed
-- Sufficient memory for SVG rasterization
-- Text wrapping logic to fit titles in 4 lines max
+The plugin never renders its own thumbnail. `createExternalEmbed()` sources one in two tiers:
 
-Generation can be disabled by passing `{ generateDefaultImage: false }` to `createExternalEmbed()`.
+1. **Own-domain URLs** (`url` starts with `me`): uploads `<me>/og/<slug>.png`, the image the
+   Eleventy theme already built with Satori + resvg. `#urlToOgSlug()` handles both the
+   Indiekit path shape (`/notes/2026/02/18/slug`) and the Eleventy one
+   (`/content/type/2026-02-18-slug/`).
+2. **Any URL**: uploads the page's `og:image`, read from the HTML by `fetchOpenGraphData()`.
+
+If neither yields an image the embed ships without a `thumb` — a text-only card. The former
+third tier, an SVG+sharp thumbnail generated from the title, was removed in v1.0.22: its
+output was visibly worse than the theme's, and it silently competed with it.
+
+`uploadImageFromUrl()` returns `null` on a non-OK response *or* a non-`image/` content type,
+so a site that answers a missing `/og/<slug>.png` with an HTML 404 page falls through to
+tier 2 instead of uploading the error page as a thumbnail.
 
 ### Reply Threading (v1.0.21+)
 
@@ -208,7 +216,7 @@ Bluesky supports max 4 photos per post. The plugin slices `properties.photo` to 
 
 **Core:**
 - `@atproto/api` ^0.14.0 - AT Protocol SDK
-- `sharp` ^0.33.0 - Image compression and SVG rasterization
+- `sharp` ^0.33.0 - Image compression
 - `html-to-text` ^9.0.0 - HTML to plain text conversion
 - `jsdom` ^24.0.0 - HTML parsing for OG metadata
 
@@ -233,4 +241,4 @@ Manual testing against real Bluesky API is required. No automated test suite exi
 - Bookmark with OG card
 - Post with @mentions and #hashtags (check facets)
 - Post with large images (check compression)
-- Post with no OG image (check default generation)
+- Post with no OG image (embed must have no `thumb`, never a generated one)

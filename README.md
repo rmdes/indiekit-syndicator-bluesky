@@ -1,14 +1,15 @@
 # @rmdes/indiekit-syndicator-bluesky
 
-Bluesky syndicator for [Indiekit](https://getindiekit.com) with full support for likes, reposts, bookmarks, and quote posts using the AT Protocol.
+Bluesky syndicator for [Indiekit](https://getindiekit.com) with full support for likes, reposts, bookmarks, replies, and quote posts using the AT Protocol.
 
 ## Features
 
 - Syndicates notes, articles, and photos to Bluesky
 - Native likes and reposts for Bluesky URLs
+- Threaded replies to Bluesky posts
 - External like/repost support (syndicates as posts with link cards)
 - Automatic rich text facet detection (@mentions, #hashtags, URLs)
-- Open Graph link card embeds with thumbnail generation
+- Open Graph link card embeds that reuse your site's pre-generated OG images
 - Image compression and upload (up to 4 images per post)
 - Smart URL handling (removes URLs shown in OG cards from text)
 - Quote posts with optional images
@@ -66,7 +67,6 @@ Text posts, articles with links, and photo posts are syndicated to Bluesky as re
 - Detects and creates rich text facets (@mentions, #hashtags, links)
 - Compresses and uploads up to 4 photos
 - Creates Open Graph link cards for external URLs
-- Generates default thumbnails if no OG image exists
 
 ### Likes
 
@@ -83,6 +83,28 @@ Text posts, articles with links, and photo posts are syndicated to Bluesky as re
 
 Creates a post with a link card showing the bookmarked URL, plus your commentary and permalink.
 
+### Replies
+
+A post whose `in-reply-to` is a Bluesky URL is syndicated as a genuine threaded reply,
+appearing under the original post rather than as a standalone post that merely links to it.
+
+The plugin fetches the parent post over the AT Protocol to obtain the `uri` and `cid` that
+Bluesky's reply reference requires, then sets both `parent` and `root`. If the post you are
+replying to is itself a reply, its existing `root` is reused, so your reply joins the
+original thread instead of starting a new one.
+
+Two details worth knowing:
+
+- **Only Bluesky URLs thread.** The URL is matched by looking for `bsky.app` or `bluesky`
+  in it. Replying to a Mastodon post, or to anything else, syndicates as an ordinary post.
+- **Only regular posts thread.** Likes, reposts, and bookmarks are dispatched before reply
+  resolution happens, so an `in-reply-to` alongside a `like-of` or `bookmark-of` is ignored.
+
+If the parent cannot be resolved — deleted post, changed handle, rate limit — the error is
+raised rather than swallowed. Indiekit marks the target as failed and the post can be
+retried, instead of silently publishing an unthreaded reply. (Before v1.0.21 it did the
+latter.)
+
 ## How It Works
 
 The plugin uses the AT Protocol (`@atproto/api`) to:
@@ -91,8 +113,9 @@ The plugin uses the AT Protocol (`@atproto/api`) to:
 2. Upload and compress images (if any)
 3. Build post text with automatic facet detection
 4. Fetch Open Graph metadata for link cards
-5. Create the appropriate post type (post, like, repost, quote)
-6. Return the syndicated post URL
+5. Resolve the reply reference when replying to a Bluesky post
+6. Create the appropriate post type (post, reply, like, repost, quote)
+7. Return the syndicated post URL
 
 ## Text Handling
 
@@ -112,11 +135,30 @@ Images are automatically:
 
 ## Link Card Embeds
 
-For posts with external URLs (articles, bookmarks, likes of external URLs), the plugin:
-1. Fetches Open Graph metadata (title, description, image)
-2. Uploads the OG image as a thumbnail
-3. If no OG image exists, generates a default thumbnail with the title text
-4. Creates a link card embed
+Any post without photos gets a link card. The card points at the post's external URL
+(the article, bookmark, or liked page) when there is one, and at the post's own permalink
+when there isn't — so a plain note still shows a card linking back to your site.
+
+Photos always win: a post with images embeds those instead, and no link card is shown.
+
+The card's title and description always come from fetching that URL and reading its
+`og:title` / `og:description`, falling back to `<title>` and `<meta name="description">`.
+
+The thumbnail is sourced in two tiers:
+
+1. **Your own posts** — the plugin uploads `<your-site>/og/<slug>.png`, the Open Graph
+   image your site has already generated. It derives `<slug>` from the URL path, handling
+   both `/notes/2026/02/18/slug` and `/content/type/2026-02-18-slug/`. This requires
+   Indiekit's `publication.me` to be set, which it normally is.
+2. **Everything else** — the page's own `og:image`.
+
+If neither yields an image, the card ships without a thumbnail and Bluesky renders it as a
+text-only card. The plugin does not generate a thumbnail of its own; it did until v1.0.22,
+and the result was worse than what a site's own OG pipeline produces.
+
+A missing `/og/<slug>.png` is safe: the upload is rejected unless the response is both OK
+and an actual image, so a site that answers with an HTML 404 page falls through to tier 2
+rather than uploading the error page as a thumbnail.
 
 ## Environment Variables
 
