@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - run: npm ci
+
+      # `npm test` also runs test/index.js, which imports @indiekit-test/fixtures
+      # — a workspace-internal helper of the upstream monorepo (helpers/fixtures),
+      # never published to npm. That file can only run with the fork overlaid into
+      # indiekit-origin, which is what indiekit-scripts/fork-verify.sh does.
+      #
+      # These two cover the fork's own additions (external embeds, AT-URI mapping),
+      # so they are the part worth gating a standalone PR on.
+      - name: Run standalone tests
+        run: node --test test/external-embed.js test/uri-to-post-url.js
