@@ -16,9 +16,12 @@ const serve = (html) =>
       response.writeHead(200, { "Content-Type": "text/html" });
       response.end(html);
     });
-    server.listen(0, "127.0.0.1", () =>
-      resolve({ server, url: `http://127.0.0.1:${server.address().port}/` }),
-    );
+    server.listen(0, "127.0.0.1", () => {
+      const { port } = /** @type {import("node:net").AddressInfo} */ (
+        server.address()
+      );
+      resolve({ server, url: `http://127.0.0.1:${port}/` });
+    });
   });
 
 test("external embed without og:image yields a thumbless card", async () => {
@@ -32,6 +35,7 @@ test("external embed without og:image yields a thumbless card", async () => {
   try {
     // No handle or password: an authenticated call would throw, proving the
     // embed no longer needs a client when the target page has no image.
+    // @ts-expect-error — no credentials on purpose, see above
     const bluesky = new Bluesky({ profileUrl: "https://bsky.app/profile" });
     const embed = await bluesky.createExternalEmbed(url);
 
