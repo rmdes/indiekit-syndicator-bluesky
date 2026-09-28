@@ -211,6 +211,54 @@ describe("syndicator-bluesky/lib/bluesky", () => {
     assert.match(result, BLUESKY_POST_URL);
   });
 
+  it("Posts a threaded reply to a Bluesky post", async () => {
+    const result = await bluesky.post(
+      {
+        content: { html: "<p>Me too!</p>" },
+        "in-reply-to": postUrl,
+        "post-type": "reply",
+      },
+      me,
+    );
+    const parent = await bluesky.getPost(postUrl);
+    const reply = await bluesky.getPost(result);
+
+    assert.match(result, BLUESKY_POST_URL);
+    assert.equal(reply.value.reply.parent.uri, parent.uri);
+    assert.equal(reply.value.reply.root.uri, parent.uri);
+  });
+
+  it("Roots a reply to a reply at the original post", async () => {
+    const firstReplyUrl = await bluesky.post(
+      { content: { html: "<p>Me too!</p>" }, "in-reply-to": postUrl },
+      me,
+    );
+    const result = await bluesky.post(
+      { content: { html: "<p>And me.</p>" }, "in-reply-to": firstReplyUrl },
+      me,
+    );
+    const original = await bluesky.getPost(postUrl);
+    const first = await bluesky.getPost(firstReplyUrl);
+    const second = await bluesky.getPost(result);
+
+    assert.equal(second.value.reply.parent.uri, first.uri);
+    assert.equal(second.value.reply.root.uri, original.uri);
+  });
+
+  it("Posts a reply to a URL on another site without threading", async () => {
+    const result = await bluesky.post(
+      {
+        content: { html: "<p>Me too!</p>" },
+        "in-reply-to": "https://another.example/post/1",
+      },
+      me,
+    );
+    const post = await bluesky.getPost(result);
+
+    assert.match(result, BLUESKY_POST_URL);
+    assert.equal(post.value.reply, undefined);
+  });
+
   it("Posts a post to Bluesky", async () => {
     const result = await bluesky.post(
       {
@@ -224,6 +272,31 @@ describe("syndicator-bluesky/lib/bluesky", () => {
     );
 
     assert.match(result, BLUESKY_POST_URL);
+  });
+
+  it("Posts a post with clickable link text to Bluesky", async () => {
+    const result = await bluesky.post(
+      {
+        content: {
+          html: '<p>I like <a href="https://cheese.example">cheese</a>.</p>',
+        },
+        url: "https://foo.bar",
+      },
+      me,
+    );
+    const post = await bluesky.getPost(result);
+    const facets = post.value.facets.filter(
+      (facet) => facet.features[0].uri === "https://cheese.example",
+    );
+
+    // The link text, and the URL appended to the text
+    assert.deepEqual(
+      facets.map((facet) => facet.index),
+      [
+        { byteStart: 7, byteEnd: 13 },
+        { byteStart: 15, byteEnd: 37 },
+      ],
+    );
   });
 
   it("Posts a post with photo to Bluesky", async () => {
