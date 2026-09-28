@@ -47,22 +47,23 @@ export BLUESKY_PASSWORD="your-app-password"
 
 ## Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `handle` | string | `""` | Your Bluesky handle (without the @) |
-| `password` | string | `process.env.BLUESKY_PASSWORD` | Bluesky app password |
-| `profileUrl` | string | `"https://bsky.app/profile"` | Bluesky profile URL base |
-| `serviceUrl` | string | `"https://bsky.social"` | Bluesky service URL |
-| `includePermalink` | boolean | `false` | Always append permalink to post text |
-| `syndicateExternalLikes` | boolean | `true` | Syndicate likes of external URLs as posts with link cards |
-| `syndicateExternalReposts` | boolean | `true` | Syndicate reposts of external URLs as posts with link cards |
-| `checked` | boolean | `false` | Pre-check syndicator in Indiekit UI |
+| Option                     | Type    | Default                        | Description                                                 |
+| -------------------------- | ------- | ------------------------------ | ----------------------------------------------------------- |
+| `handle`                   | string  | `""`                           | Your Bluesky handle (without the @)                         |
+| `password`                 | string  | `process.env.BLUESKY_PASSWORD` | Bluesky app password                                        |
+| `profileUrl`               | string  | `"https://bsky.app/profile"`   | Bluesky profile URL base                                    |
+| `serviceUrl`               | string  | `"https://bsky.social"`        | Bluesky service URL                                         |
+| `includePermalink`         | boolean | `false`                        | Always append permalink to post text                        |
+| `syndicateExternalLikes`   | boolean | `true`                         | Syndicate likes of external URLs as posts with link cards   |
+| `syndicateExternalReposts` | boolean | `true`                         | Syndicate reposts of external URLs as posts with link cards |
+| `checked`                  | boolean | `false`                        | Pre-check syndicator in Indiekit UI                         |
 
 ## Post Type Support
 
 ### Regular Posts (Notes, Articles, Photos)
 
 Text posts, articles with links, and photo posts are syndicated to Bluesky as regular posts. The plugin automatically:
+
 - Converts HTML content to plain text
 - Detects and creates rich text facets (@mentions, #hashtags, links)
 - Compresses and uploads up to 4 photos
@@ -120,6 +121,7 @@ The plugin uses the AT Protocol (`@atproto/api`) to:
 ## Text Handling
 
 Bluesky has a 300-character limit. The plugin:
+
 - Converts HTML to plain text
 - Removes URLs that will be shown in OG cards (to save space)
 - Appends your blog permalink (for webmentions)
@@ -128,6 +130,7 @@ Bluesky has a 300-character limit. The plugin:
 ## Image Handling
 
 Images are automatically:
+
 - Fetched from your site
 - Compressed to under 1MB (Bluesky limit)
 - Uploaded to Bluesky
