@@ -289,13 +289,12 @@ describe("syndicator-bluesky/lib/bluesky", () => {
       (facet) => facet.features[0].uri === "https://cheese.example",
     );
 
-    // The link text, and the URL appended to the text
+    // Fork policy: an external URL becomes the link card and is kept out of
+    // the text, so only the link text carries the facet (upstream also
+    // appends the URL to the text and expects a second facet)
     assert.deepEqual(
       facets.map((facet) => facet.index),
-      [
-        { byteStart: 7, byteEnd: 13 },
-        { byteStart: 15, byteEnd: 37 },
-      ],
+      [{ byteStart: 7, byteEnd: 13 }],
     );
   });
 
