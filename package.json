@@ -38,7 +38,7 @@
     "sharp": "^0.35.5"
   },
   "scripts": {
-    "test": "node --test test/*.js"
+    "test": "node --test test/external-embed.js test/uri-to-post-url.js"
   },
   "devDependencies": {
     "@atproto/dev-env": "^0.6.4"
